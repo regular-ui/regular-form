@@ -9,17 +9,11 @@
  */
 
 
-
 var Regular = require('regularjs'),
-	_ = require('./helper/util'),
-	prototype = require('./form'),
-	input = require('./directive/input');
-var directive = _.extend({}, input);
+    _ = require('./helper/util'),
+    prototype = require('./form'),
+    directive = require('./directive');
 var RegularForm = Regular.extend(prototype)
-	.directive(directive);
-
-RegularForm.mixIn = function() {
-
-};
+    .directive(directive);
 
 module.exports = RegularForm;

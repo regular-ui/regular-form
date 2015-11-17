@@ -13,19 +13,20 @@ var toString = Object.prototype.toString;
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 var class2type = ['Function', 'String', 'Number', 'Date', 'RegExp', 'Error'];
 
-_.noop = function() {};
+_.noop = function () {
+};
 
-_.trim = function(str) {
+_.trim = function (str) {
     if (!!str.trim) return str.trim();
     return str.replace(/(^\s*)|(\s*$)/g, '');
 };
 
-_.isArray = Array.isArray || function(obj) {
-    return toString.call(obj) === '[object Array]';
-};
+_.isArray = Array.isArray || function (obj) {
+        return toString.call(obj) === '[object Array]';
+    };
 
 // Function Date RegExp Error Array 和 new 创建的对象
-_.isObject = function(obj) {
+_.isObject = function (obj) {
     var type = typeof obj;
     return type === 'function' || type === 'object' && !!obj;
 };
@@ -39,35 +40,35 @@ _.isObject = function(obj) {
 // Object.prototype.toString.call(str)  "[object String]"
 for (var i = 0, l = class2type.length; i < l; i++) {
     var name = class2type[i];
-    _['is' + name] = function(obj) {
+    _['is' + name] = function (obj) {
         return toString.call(obj) === '[object ' + name + ']';
     };
 }
 
 if (typeof /./ !== 'function') {
-    _.isFunction = function(obj) {
+    _.isFunction = function (obj) {
         return typeof obj == 'function' || false;
     };
 }
 
-_.isNaN = function(obj) {
+_.isNaN = function (obj) {
     return _.isNumber(obj) && obj !== +obj;
 };
 
-_.isBoolean = function(obj) {
+_.isBoolean = function (obj) {
     return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
 };
 
-_.isNull = function(obj) {
+_.isNull = function (obj) {
     return obj === null;
 };
 
-_.isUndefined = function(obj) {
+_.isUndefined = function (obj) {
     return obj === void 0;
 };
 
 // 测试对象是否是通过 "{}" 或者 "new Object" 创建的
-_.isPlainObject = function(obj) {
+_.isPlainObject = function (obj) {
     if (!obj || !_.isObject(obj) || obj.nodeType) {
         return false
     }
@@ -79,7 +80,8 @@ _.isPlainObject = function(obj) {
         return false
     }
     var key;
-    for (key in obj) {}
+    for (key in obj) {
+    }
     return key === undefined || hasOwnProperty.call(obj, key)
 };
 
@@ -92,7 +94,7 @@ _.isPlainObject = function(obj) {
  * @param {Object}  [objectN]
  * @return {Object}
  */
-_.extend = function() {
+_.extend = function () {
     var options, name, src, copy, copyIsArray, clone, target = arguments[0] || {},
         i = 1,
         length = arguments.length,
@@ -135,9 +137,41 @@ _.extend = function() {
     return target;
 };
 
+_.forEach = function (obj, iteratee, context) {
+    if (!_.isArray(obj)) return obj;
+    var i, length = obj.length;
+    if (!!obj.forEach) {
+        obj.forEach(iteratee, context);
+        return obj;
+    }
+    for (i = 0; i < length; i++) {
+        iteratee.call(context, obj[i], i, obj);
+    }
+    return obj;
+};
+
+// 测试数组的所有元素是否都通过了指定函数的测试
+_.every = function (obj, predicate, context) {
+    if (!_.isArray(obj)) return obj;
+    var i, value, length = obj.length;
+    if (!!obj.every) {
+        return obj.every(predicate, context);
+    }
+    for (i = 0; i < length; i++) {
+        value = iteratee.call(context, obj[i], i, obj);
+        if (value === false) {
+            return value;
+        }
+    }
+    return value;
+};
+
 // xx-oo return xxOo
-_.camelCase = function(str) {
-    return ("" + str).replace(/-\D/g, function(match) {
+_.camelCase = function (str) {
+    return ("" + str).replace(/-\D/g, function (match) {
         return match.charAt(1).toUpperCase();
     });
-}
+};
+
+_.noop = function () {
+};

@@ -17,15 +17,32 @@
 
 var _ = require('./helper/util');
 var prototype = {
-	config: function(data){
-		_.extend(data, {
-			form: {}
-		});
-	},
-	$setValidity: null,
-	$setDirty: null,
-	$setPristine: null,
-	$setSubmitted: null,
-	$setError: null
+    computed: function () {
+
+    },
+    config: function (data) {
+        data.form = {};
+    },
+    resetField: function (model) {
+        var data = this.data;
+        data.form['$$' + model] = {
+            $dirty: false,
+            $invalid: false,
+            $error: {}
+        };
+    },
+    setValidity: function (model) {
+
+    },
+    setDirty: function (model) {
+
+    },
+    setSubmitted: _.noop,
+    setError: function () {
+
+    },
+    validate: function(model){
+
+    }
 };
 module.exports = prototype;

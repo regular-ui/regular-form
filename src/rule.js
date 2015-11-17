@@ -7,6 +7,25 @@
  * @update
  * -------------------------------------------------------
  */
+var constant = require('./helper/const');
+var rule = {
+    validateField: {
+        'text': ['required', 'pattern', 'extend'],
+        'password': ['required', 'pattern', 'extend'],
+        'search': ['required', 'pattern', 'extend'],
+        'url': ['required', 'pattern', 'extend'],
+        'number': ['required', 'min', 'max', 'step', 'pattern', 'extend'],
+        'tel': ['required', 'min', 'max', 'step', 'pattern', 'extend'],
+        'email': ['required', 'pattern', 'extend'],
+        'date': ['required', 'pattern', 'extend'],
+        'month': ['required', 'pattern', 'extend'],
+        'week': ['required', 'pattern', 'extend'],
+        'time': ['required', 'pattern', 'extend'],
+        'datetime': ['required', 'pattern', 'extend'],
+        'datetime-local': ['required', 'pattern', 'extend'],
+        'checkbox': ['required', 'extend'],
+        'radio': ['required', 'extend']
+    }
+};
 
-var rule = null;
 module.exports = rule;

@@ -74,17 +74,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Regular = __webpack_require__(1),
 		_ = __webpack_require__(2),
 		prototype = __webpack_require__(3),
-		input = __webpack_require__(4);
-	var test = {};
-	var directive = _.extend(test, input);
-	console.log(test);
-	console.log(directive);
+		directive = __webpack_require__(4);
 	var RegularForm = Regular.extend(prototype)
 		.directive(directive);
-
-	RegularForm.mixIn = function() {
-
-	};
 
 	module.exports = RegularForm;
 
@@ -266,7 +258,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _ = __webpack_require__(2);
 	var prototype = {
 		config: function(data){
-
+			_.extend(data, {
+				form: {
+					
+				}
+			});
 		},
 		$setValidity: null,
 		$setDirty: null,
@@ -292,7 +288,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	var input = {
-		'r_input': function(element, value, name, attrs) {
+		'name': function(element, value, name, attrs) {
 			
 		}
 	};
