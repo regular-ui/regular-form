@@ -17,31 +17,79 @@
 
 var _ = require('./helper/util');
 var prototype = {
-    computed: function () {
-
+    computed: {
+        '$dirty': function (data) {
+            var mark = false;
+            for (var i in data.form) {
+                if (data.form.hasOwnProperty(i)) {
+                    if (!mark)
+                        mark = data.form[i].$dirty;
+                }
+            }
+            return mark;
+        },
+        '$invalid': function (data) {
+            var mark = false;
+            for (var i in data.form) {
+                if (data.form.hasOwnProperty(i)) {
+                    if (!mark)
+                        mark = data.form[i].$invalid;
+                }
+            }
+            return mark;
+        }
     },
     config: function (data) {
         data.form = {};
     },
-    resetField: function (model) {
+    init: function (data) {
+        var context = this;
+        for (var i in data.form) {
+            if (data.form.hasOwnProperty(i)) {
+                var obj = data.form[i];
+                (function (obj) {
+                    context.$watch(obj.$model, function (newValue, oldValue) {
+                        var mark = true;
+                        _.forEach(obj.$handler, function (item, index) {
+                            if (mark) {
+                                mark = item.handler.call(context, newValue, oldValue);
+                                !mark && console.log('directive' + item.directive + 'check error');
+                                context.setError(obj.$name, item.directive.split('-')[1], !mark);
+                            }
+                        });
+                        context.setDirty(obj.$name, newValue !== obj.$origin);
+                        context.setInValidity(obj.$name, !mark);
+                    });
+                }(obj));
+            }
+        }
+    },
+    resetField: function (name, model) {
         var data = this.data;
-        data.form['$$' + model] = {
+        _.extend(true, data.form['$$' + name] = {}, {
+            $origin: this.$get(model) || '',
+            $name: name,
+            $handler: [],
+            $model: model,
             $dirty: false,
             $invalid: false,
             $error: {}
-        };
+        });
     },
-    setValidity: function (model) {
-
+    setInValidity: function (name, flag) {
+        this.data.form['$$' + name].$invalid = flag;
     },
-    setDirty: function (model) {
-
+    setDirty: function (name, flag) {
+        this.data.form['$$' + name].$dirty = flag;
     },
     setSubmitted: _.noop,
-    setError: function () {
-
+    setError: function (name, field, flag) {
+        this.data.form['$$' + name].$error[field] = flag;
     },
-    validate: function(model){
+    addHandler: function (name, handler) {
+        this.data.form['$$' + name].$handler.push(handler);
+    },
+    removeHandler: function (name, directive) {
 
     }
 };

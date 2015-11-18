@@ -21,6 +21,10 @@ _.trim = function (str) {
     return str.replace(/(^\s*)|(\s*$)/g, '');
 };
 
+_.toArray = Array.form || function (arrayLike) {
+        return Array.prototype.slice.call(arrayLike);
+    };
+
 _.isArray = Array.isArray || function (obj) {
         return toString.call(obj) === '[object Array]';
     };

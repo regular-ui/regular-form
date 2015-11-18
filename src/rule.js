@@ -7,7 +7,7 @@
  * @update
  * -------------------------------------------------------
  */
-var constant = require('./helper/const');
+
 var rule = {
     validateField: {
         'text': ['required', 'pattern', 'extend'],
