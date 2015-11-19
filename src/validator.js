@@ -15,6 +15,9 @@ var validator = {
     },
     checkType: function (type, value) {
         return constant[type.toUpperCase() + '_REGEXP'].test(value);
+    },
+    checkExtend: function(){
+
     }
 };
 module.exports = validator;

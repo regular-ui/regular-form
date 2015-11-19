@@ -1,14 +1,14 @@
 (function () {
     var tpl = '<form action="" novalidate>\
-            <input name="id" type="text" r-required="required" r-type="number" r-model={value} r-max="33" r-extend={extend}/>\
-            <input name="id2" type="text" r-required="required" r-type="number" r-model={value1} r-max="33" r-extend={extend}/>\
-            {form.$$id.$error.required}\
-            {form.$$id.$error.type}\
-            {form.$$id.$invalid}\
-            {form.$$id.$dirty}\
-            {form.$$id2.$invalid}\
-            {form.$$id2.$dirty}\
-            {$dirty}\
+            id: <input name="id" type="text" r-required="required" r-type="number" r-model={value} r-max="33" r-extend={extend}/><br>\
+            id2: <input name="id2" type="text" r-required="required" r-type="number" r-model={value1} r-max="33" r-extend={extend}/><br>\
+            form.$$id.$error.required: {form.$$id.$error.required}<br>\
+            form.$$id.$error.type: {form.$$id.$error.type}<br>\
+            form.$$id.$invalid: {form.$$id.$invalid}<br>\
+            form.$$id.$dirty: {form.$$id.$dirty}<br>\
+            form.$$id2.$invalid: {form.$$id2.$invalid}<br>\
+            form.$$id2.$dirty: {form.$$id2.$dirty}<br>\
+            form.$dirty: {$dirty}<br>\
         </form>';
     var Form = RegularForm.extend({
         template: tpl,

@@ -176,6 +176,3 @@ _.camelCase = function (str) {
         return match.charAt(1).toUpperCase();
     });
 };
-
-_.noop = function () {
-};
