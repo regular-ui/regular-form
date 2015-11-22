@@ -134,10 +134,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	// typeof str; "object"
 	// Object.prototype.toString.call(str)  "[object String]"
 	for (var i = 0, l = class2type.length; i < l; i++) {
-	    var name = class2type[i];
-	    _['is' + name] = function (obj) {
-	        return toString.call(obj) === '[object ' + name + ']';
-	    };
+	    (function (i) {
+	        var name = class2type[i];
+	        _['is' + name] = function (obj) {
+	            return toString.call(obj) === '[object ' + name + ']';
+	        };
+	    })(i)
 	}
 
 	if (true) {
@@ -232,6 +234,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return target;
 	};
 
+	// 遍历数组
 	_.forEach = function (obj, iteratee, context) {
 	    if (!_.isArray(obj)) return obj;
 	    var i, length = obj.length;
@@ -261,6 +264,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return value;
 	};
 
+	// Object.keys
+	_.keys = Object.keys || function (obj) {
+	        var ret = [];
+	        for (var key in obj) {
+	            if (obj.hasOwnProperty(key)) {
+	                ret.push(ret);
+	            }
+	        }
+	        return ret;
+	    };
 	// xx-oo return xxOo
 	_.camelCase = function (str) {
 	    return ("" + str).replace(/-\D/g, function (match) {
@@ -268,7 +281,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	};
 
-	_.noop = function () {
+	// aop enhance
+	_.aop = function (fn, before, after) {
+	    var handler = fn;
+	    return function () {
+	        var event = {args: _.toArray(arguments)};
+	        before(event);
+	        if (!event.stopped) {
+	            event.value = handler.apply(this, event.args);
+	            after(event);
+	        }
+	        return event.value;
+	    };
+	};
+
+	// log
+	_.log = function (msg, throwflag) {
+	    if (throwflag)
+	        throw msg;
+	    else
+	        console.log(msg)
+	};
+
+	// directive r-required ==> required
+	_.dName = function (directiveName) {
+	    return directiveName.split('-')[1];
 	};
 
 /***/ },
@@ -284,67 +321,82 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @update
 	 * -------------------------------------------------------
 	 * form status
-	 * @property {boolean} $pristine True if user has not interacted with the form yet.
 	 * @property {boolean} $dirty True if user has already interacted with the form.
-	 * @property {boolean} $valid True if all of the containing forms and controls are valid.
 	 * @property {boolean} $invalid True if at least one containing control or form is invalid.
-	 * @property {boolean} $submitted True if user has submitted the form even if its invalid.
 	 * @property {Object} $error Is an object hash, containing references to controls or forms with failing validators.
 	 */
-
+	var Regular = __webpack_require__(1);
 	var _ = __webpack_require__(2);
-	var prototype = {
+	var dom = Regular.dom;
+	var checkRule = {
+	    '1': function (input, off) {
+	        var context = this;
+	        if (!!off) {
+	            this.$unwatch(input.$model, function (newValue, oldValue) {
+	                context.checkValidity(input.$name);
+	            });
+	        } else {
+	            this.$watch(input.$model, function (newValue, oldValue) {
+	                context.checkValidity(input.$name);
+	            });
+	        }
+	    },
+	    '2': function (input, off) {
+	        var context = this;
+	        if (!!off) {
+	            dom.off(input.$element, 'blur', function () {
+	                context.checkValidity(input.$name);
+	            });
+	        } else {
+	            dom.on(input.$element, 'blur', function () {
+	                context.checkValidity(input.$name);
+	            });
+	        }
+	    }
+	};
+	prototype = {
 	    computed: {
+	        // 整个表单的status
 	        '$dirty': function (data) {
-	            var mark = false;
-	            for (var i in data.form) {
-	                if (data.form.hasOwnProperty(i)) {
-	                    if (!mark)
-	                        mark = data.form[i].$dirty;
-	                }
-	            }
+	            var mark = false,
+	                keys = _.keys(data.form);
+	            _.forEach(keys, function (key) {
+	                if (!mark)
+	                    mark = data.form[key].$dirty;
+	            });
 	            return mark;
 	        },
 	        '$invalid': function (data) {
-	            var mark = false;
-	            for (var i in data.form) {
-	                if (data.form.hasOwnProperty(i)) {
-	                    if (!mark)
-	                        mark = data.form[i].$invalid;
-	                }
-	            }
+	            var mark = false,
+	                keys = _.keys(data.form);
+	            _.forEach(keys, function (key) {
+	                if (!mark)
+	                    mark = data.form[key].$invalid;
+	            });
 	            return mark;
 	        }
 	    },
 	    config: function (data) {
+	        this.supr(data);
 	        data.form = {};
+	        data.rule = data.rule || 1; // 1:实时验证,2:失去焦点时验证
 	    },
 	    init: function (data) {
-	        var context = this;
-	        for (var i in data.form) {
-	            if (data.form.hasOwnProperty(i)) {
-	                var obj = data.form[i];
-	                (function (obj) {
-	                    context.$watch(obj.$model, function (newValue, oldValue) {
-	                        var mark = true;
-	                        _.forEach(obj.$handler, function (item, index) {
-	                            if (mark) {
-	                                mark = item.handler.call(context, newValue, oldValue);
-	                                !mark && console.log('directive' + item.directive + 'check error');
-	                                context.setError(obj.$name, item.directive.split('-')[1], !mark);
-	                            }
-	                        });
-	                        context.setDirty(obj.$name, newValue !== obj.$origin);
-	                        context.setInValidity(obj.$name, !mark);
-	                    });
-	                }(obj));
-	            }
-	        }
+	        this.supr(data);
+	        data.rule = data.rule || 1;
 	    },
-	    resetField: function (name, model) {
+	    /**
+	     * 设置表单元素初始值
+	     * @param name      - 表单元素name
+	     * @param element   - 表单元素
+	     * @param model     - r-model
+	     */
+	    resetField: function (name, element, model) {
 	        var data = this.data;
+	        // 表单元素的status
 	        _.extend(true, data.form['$$' + name] = {}, {
-	            $origin: this.$get(model) || '',
+	            $origin: this.$get(model),
+	            $element: element,
 	            $name: name,
 	            $handler: [],
 	            $model: model,
@@ -352,22 +404,75 @@ return /******/ (function(modules) { // webpackBootstrap
 	            $invalid: false,
 	            $error: {}
 	        });
+	        this.$update();
 	    },
 	    setInValidity: function (name, flag) {
 	        this.data.form['$$' + name].$invalid = flag;
+	        this.$update();
 	    },
 	    setDirty: function (name, flag) {
 	        this.data.form['$$' + name].$dirty = flag;
+	        this.$update();
 	    },
-	    setSubmitted: _.noop,
 	    setError: function (name, field, flag) {
 	        this.data.form['$$' + name].$error[field] = flag;
+	        this.$update();
 	    },
 	    addHandler: function (name, handler) {
-	        this.data.form['$$' + name].$handler.push(handler);
+	        var handlers = this.data.form['$$' + name].$handler,
+	            data = this.data,
+	            input = data.form['$$' + name];
+	        handlers.push(handler);
+	        handlers.sort(function (handler0, handler1) {
+	            return handler0.priority - handler1.priority;
+	        });
+	        checkRule[data.rule].call(this, input);
 	    },
 	    removeHandler: function (name, directive) {
-
+	        var index = -1,
+	            data = this.data,
+	            input = data.form['$$' + name],
+	            handlers = input.$handler;
+	        _.forEach(handlers, function (item, i) {
+	            if (item.directive === directive) {
+	                index = i;
+	            }
+	        });
+	        (index !== -1) && handlers.splice(index, 1);
+	        checkRule[data.rule].call(this, input, true);
+	    },
+	    /**
+	     * check表单
+	     * @param name  - 表单元素的name(没有传name check整个表单)
+	     */
+	    checkValidity: function (name) {
+	        var context = this,
+	            data = this.data;
+	        if (_.isUndefined(name)) {
+	            var keys = _.keys(data.form);
+	            _.forEach(keys, function (key) {
+	                context.checkValidity(data.form[key].$name);
+	            });
+	        } else {
+	            var mark = true,
+	                checkItem = data.form['$$' + name],
+	                model = context.$get(checkItem.$model);
+	            _.forEach(checkItem.$handler, function (item) {
+	                if (mark) {
+	                    mark = item.handler.call(context, model);
+	                    !mark && _.log('directive' + item.directive + 'check error');
+	                    context.setError(checkItem.$name, _.dName(item.directive), !mark);
+	                } else {
+	                    // 验证过程中有出错的，将PRIORITY低的验证重置
+	                    context.setError(checkItem.$name, _.dName(item.directive), mark);
+	                }
+	            });
+	            // 表单元素全部都是string类型
+	            // 污染之后清空，值为'', 默认为undefined
+	            context.setDirty(checkItem.$name, !!model != !!checkItem.$origin);
+	            context.setInValidity(checkItem.$name, !mark);
+	        }
+	        context.$update();
 	    }
 	};
 	module.exports = prototype;
@@ -385,88 +490,112 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @update
 	 * -------------------------------------------------------
 	 */
-	var rule = __webpack_require__(5);
 	var Regular = __webpack_require__(1);
 	var _ = __webpack_require__(2);
-	var validator = __webpack_require__(6);
+	var validator = __webpack_require__(5);
+	var constant = __webpack_require__(6);
 
-	var checkAttr = function (value, fieldName) {
-	    if (!value || value === '') {
-	        throw 'you need specified a value for [' + fieldName + ']';
+	var extractValue = function (value) {
+	    if (!!value && !!value.type && value.type.toLowerCase() === 'expression') {
+	        value = this.$get(value);
 	    }
+	    return value;
 	};
 
-	var control = function (links, watch) {
-	    var directiveValue = links[1],
-	        directiveName = links[2],
-	        attrs = links[3],
-	        rModel,
-	        name;
+	var addControl = function (element, directiveValue, directiveName, attrs) {
+	    var rModel,
+	        context = this,
+	        name = element.name,
+	        key = _.dName(directiveName);
+	    if (!name || name === '') {
+	        _.log('you need specified a value for [' + name + ']', true);
+	    }
+	    var watch = function (model) {
+	        directiveValue = extractValue.call(context, directiveValue);
+	        return validator[_.camelCase('check-' + key)].call(context, model, directiveValue, name);
+	    };
 
-	    checkAttr.call(this, directiveValue, directiveName);
-	    _.forEach(attrs, function (item, index) {
+	    _.forEach(attrs, function (item) {
 	        if (item.name === 'r-model') {
 	            rModel = item.value;
 	        }
-	        if (item.name === 'name') {
-	            name = item.value;
-	        }
 	    });
-	    checkAttr.call(this, rModel, 'r-model');
-	    if (!this.data.form['$$' + name]) {
-	        this.resetField(name, rModel);
+	    // r-model指令在执行之后，regular会将其删除
+	    // 比如在某个条件下生效r-required的时候，r-required link函数取不到第一次compile时候的attrs，也取不到r-model
+	    //if (!rModel || rModel === '') {
+	    //    _.log('you need specified a value for [r-model]', true);
+	    //}
+	    if (!context.data.form['$$' + name]) {
+	        context.resetField(name, element, rModel);
 	    }
-
-	    this.addHandler(name, {
+	    context.addHandler(name, {
+	        // priority决定验证顺序，regular的指令是按书写顺序执行的
+	        priority: constant.PRIORITY[key],
 	        directive: directiveName,
 	        handler: watch
 	    });
+	    context.checkValidity(name);
+	    return function () {
+	        context.removeHandler.call(context, name, directiveName);
+	        // destory的时候验证的handler已经移除，需要手动setError
+	        context.setError(name, _.dName(directiveName), false);
+	        context.checkValidity(name);
+	    }
 	};
 
+
+	// 提取出Regular中的directive， 需要覆盖
+	var r_Model = Regular.directive("r-model");
+
 	var input = {
-	    'r-required': {
-	        link: function (element, value, name, attrs) {
-	            if (!!value.type && value.type === 'Expression') {
-	                value = this.$get(value);
+	    // r-model在不需要验证的元素上也会用到，表单name不是必须的
+	    'r-model': {
+	        link: function (element, value, dname, attrs) {
+	            // name是必填的
+	            var name = element.name;
+	            // 需要验证的元素，name是必须的，r-model是必须的
+	            if (name !== '' && !this.data.form['$$' + name]) {
+	                this.resetField(name, element, value);
 	            }
-	            var watch = function (newValue, oldValue) {
-	                if (value === 'false' || value === false) {
-	                    return true;
-	                }
-	                return validator.checkRequired(newValue);
-	            };
-	            control.call(this, _.toArray(arguments), watch);
+	            var destroy = r_Model.link.apply(this, arguments);
+	            return function () {
+	                destroy();
+	            }
+	        }
+	    },
+	    'r-required': {
+	        link: function (element, value, dname, attrs) {
+	            return addControl.apply(this, arguments);
 	        }
 	    },
 	    'r-type': {
-	        link: function (element, value, name, attrs) {
-	            if (!!value.type && value.type === 'Expression') {
-	                value = this.$get(value);
-	            }
-	            var watch = function (newValue, oldValue) {
-	                return validator.checkType(value, newValue);
-	            };
-	            control.call(this, _.toArray(arguments), watch);
+	        link: function (element, value, dname, attrs) {
+	            return addControl.apply(this, arguments);
 	        }
 	    },
 	    'r-min': {
-	        link: function (element, value, name, attrs) {
+	        link: function (element, value, dname, attrs) {
+	            return addControl.apply(this, arguments);
 	        }
 	    },
 	    'r-max': {
-	        link: function (element, value, name, attrs) {
+	        link: function (element, value, dname, attrs) {
+	            return addControl.apply(this, arguments);
 	        }
 	    },
 	    'r-step': {
-	        link: function (element, value, name, attrs) {
+	        link: function (element, value, dname, attrs) {
+	            return addControl.apply(this, arguments);
 	        }
 	    },
 	    'r-pattern': {
-	        link: function (element, value, name, attrs) {
+	        link: function (element, value, dname, attrs) {
+	            return addControl.apply(this, arguments);
 	        }
 	    },
 	    'r-extend': {
-	        link: function (element, value, name, attrs) {
+	        link: function (element, value, dname, attrs) {
+	            return addControl.apply(this, arguments);
 	        }
 	    }
 	};
@@ -474,42 +603,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 5 */
-/***/ function(module, exports) {
-
-	/*
-	 * -------------------------------------------------------
-	 *
-	 * @version  1.0
-	 * @author   amibug(hzxs1990225@163.com)
-	 * @date     2015/11/12
-	 * @update
-	 * -------------------------------------------------------
-	 */
-
-	var rule = {
-	    validateField: {
-	        'text': ['required', 'pattern', 'extend'],
-	        'password': ['required', 'pattern', 'extend'],
-	        'search': ['required', 'pattern', 'extend'],
-	        'url': ['required', 'pattern', 'extend'],
-	        'number': ['required', 'min', 'max', 'step', 'pattern', 'extend'],
-	        'tel': ['required', 'min', 'max', 'step', 'pattern', 'extend'],
-	        'email': ['required', 'pattern', 'extend'],
-	        'date': ['required', 'pattern', 'extend'],
-	        'month': ['required', 'pattern', 'extend'],
-	        'week': ['required', 'pattern', 'extend'],
-	        'time': ['required', 'pattern', 'extend'],
-	        'datetime': ['required', 'pattern', 'extend'],
-	        'datetime-local': ['required', 'pattern', 'extend'],
-	        'checkbox': ['required', 'extend'],
-	        'radio': ['required', 'extend']
-	    }
-	};
-
-	module.exports = rule;
-
-/***/ },
-/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -522,19 +615,62 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * -------------------------------------------------------
 	 */
 
-	var constant = __webpack_require__(7);
+	var constant = __webpack_require__(6);
+	var _ = __webpack_require__(2);
+	// true 表示通过验证
 	var validator = {
-	    checkRequired: function (value) {
-	        return value !== '';
+	    checkRequired: function (model, linkValue) {
+	        if (linkValue === 'false' || linkValue === false) {
+	            return true;
+	        }
+	        // checkbox
+	        if (_.isBoolean(model)) {
+	            return model === true;
+	        }
+	        return model !== undefined && model !== '';
 	    },
-	    checkType: function (type, value) {
-	        return constant[type.toUpperCase() + '_REGEXP'].test(value);
+	    checkType: function (model, type) {
+	        if (!constant[type.toUpperCase() + '_REGEXP']) {
+	            return true;
+	        }
+	        return constant[type.toUpperCase() + '_REGEXP'].test(model);
+	    },
+	    checkMin: function (model, min) {
+	        if (!_.isNumber(min)) {
+	            return true;
+	        }
+	        return +model >= min;
+	    },
+	    checkMax: function (model, max) {
+	        if (!_.isNumber(max)) {
+	            return true;
+	        }
+	        return +model <= max;
+	    },
+	    checkStep: function (model, step) {
+	        if (!_.isNumber(step)) {
+	            return true;
+	        }
+	        return +model % step === 0;
+	    },
+	    checkPattern: function (model, pattern) {
+	        if (!_.isRegExp(pattern)) {
+	            pattern = new RegExp(pattern);
+	        }
+	        return pattern.test(+model);
+	    },
+	    checkExtend: function (model, extend) {
+	        if (!_.isFunction(extend)) {
+	            return true;
+	        }
+	        return extend.call(this, model);
 	    }
 	};
+
 	module.exports = validator;
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports) {
 
 	/*
@@ -557,8 +693,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	    DATETIMELOCAL_REGEXP: /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)(?::(\d\d)(\.\d{1,3})?)?$/,
 	    WEEK_REGEXP: /^(\d{4})-W(\d\d)$/,
 	    MONTH_REGEXP: /^(\d{4})-(\d\d)$/,
-	    TIME_REGEXP: /^(\d\d):(\d\d)(?::(\d\d)(\.\d{1,3})?)?$/
+	    TIME_REGEXP: /^(\d\d):(\d\d)(?::(\d\d)(\.\d{1,3})?)?$/,
+
+
+	    PRIORITY: {
+	        required: 1,
+	        type: 2,
+	        min: 3,
+	        max: 4,
+	        step: 5,
+	        pattern: 6,
+	        extend: 7
+	    }
 	};
+
+
 	module.exports = constant;
 
 

@@ -7,88 +7,112 @@
  * @update
  * -------------------------------------------------------
  */
-var rule = require('./rule');
 var Regular = require('regularjs');
 var _ = require('./helper/util');
 var validator = require('./validator');
+var constant = require('./helper/const');
 
-var checkAttr = function (value, fieldName) {
-    if (!value || value === '') {
-        throw 'you need specified a value for [' + fieldName + ']';
+var extractValue = function (value) {
+    if (!!value && !!value.type && value.type.toLowerCase() === 'expression') {
+        value = this.$get(value);
     }
+    return value;
 };
 
-var control = function (links, watch) {
-    var directiveValue = links[1],
-        directiveName = links[2],
-        attrs = links[3],
-        rModel,
-        name;
+var addControl = function (element, directiveValue, directiveName, attrs) {
+    var rModel,
+        context = this,
+        name = element.name,
+        key = _.dName(directiveName);
+    if (!name || name === '') {
+        _.log('you need specified a value for [' + name + ']', true);
+    }
+    var watch = function (model) {
+        directiveValue = extractValue.call(context, directiveValue);
+        return validator[_.camelCase('check-' + key)].call(context, model, directiveValue, name);
+    };
 
-    checkAttr.call(this, directiveValue, directiveName);
-    _.forEach(attrs, function (item, index) {
+    _.forEach(attrs, function (item) {
         if (item.name === 'r-model') {
             rModel = item.value;
         }
-        if (item.name === 'name') {
-            name = item.value;
-        }
     });
-    checkAttr.call(this, rModel, 'r-model');
-    if (!this.data.form['$$' + name]) {
-        this.resetField(name, rModel);
+    // r-model指令在执行之后，regular会将其删除
+    // 比如在某个条件下生效r-required的时候，r-required link函数取不到第一次compile时候的attrs，也取不到r-model
+    //if (!rModel || rModel === '') {
+    //    _.log('you need specified a value for [r-model]', true);
+    //}
+    if (!context.data.form['$$' + name]) {
+        context.resetField(name, element, rModel);
     }
-
-    this.addHandler(name, {
+    context.addHandler(name, {
+        // priority决定验证顺序，regular的指令是按书写顺序执行的
+        priority: constant.PRIORITY[key],
         directive: directiveName,
         handler: watch
     });
+    context.checkValidity(name);
+    return function () {
+        context.removeHandler.call(context, name, directiveName);
+        // destory的时候验证的handler已经移除，需要手动setError
+        context.setError(name, _.dName(directiveName), false);
+        context.checkValidity(name);
+    }
 };
 
+
+// 提取出Regular中的directive， 需要覆盖
+var r_Model = Regular.directive("r-model");
+
 var input = {
-    'r-required': {
-        link: function (element, value, name, attrs) {
-            if (!!value.type && value.type === 'Expression') {
-                value = this.$get(value);
+    // r-model在不需要验证的元素上也会用到，表单name不是必须的
+    'r-model': {
+        link: function (element, value, dname, attrs) {
+            // name是必填的
+            var name = element.name;
+            // 需要验证的元素，name是必须的，r-model是必须的
+            if (name !== '' && !this.data.form['$$' + name]) {
+                this.resetField(name, element, value);
             }
-            var watch = function (newValue, oldValue) {
-                if (value === 'false' || value === false) {
-                    return true;
-                }
-                return validator.checkRequired(newValue);
-            };
-            control.call(this, _.toArray(arguments), watch);
+            var destroy = r_Model.link.apply(this, arguments);
+            return function () {
+                destroy();
+            }
+        }
+    },
+    'r-required': {
+        link: function (element, value, dname, attrs) {
+            return addControl.apply(this, arguments);
         }
     },
     'r-type': {
-        link: function (element, value, name, attrs) {
-            if (!!value.type && value.type === 'Expression') {
-                value = this.$get(value);
-            }
-            var watch = function (newValue, oldValue) {
-                return validator.checkType(value, newValue);
-            };
-            control.call(this, _.toArray(arguments), watch);
+        link: function (element, value, dname, attrs) {
+            return addControl.apply(this, arguments);
         }
     },
     'r-min': {
-        link: function (element, value, name, attrs) {
+        link: function (element, value, dname, attrs) {
+            return addControl.apply(this, arguments);
         }
     },
     'r-max': {
-        link: function (element, value, name, attrs) {
+        link: function (element, value, dname, attrs) {
+            return addControl.apply(this, arguments);
         }
     },
     'r-step': {
-        link: function (element, value, name, attrs) {
+        link: function (element, value, dname, attrs) {
+            return addControl.apply(this, arguments);
         }
     },
     'r-pattern': {
-        link: function (element, value, name, attrs) {
+        link: function (element, value, dname, attrs) {
+            return addControl.apply(this, arguments);
         }
     },
     'r-extend': {
-        link: function (element, value, name, attrs) {
+        link: function (element, value, dname, attrs) {
+            return addControl.apply(this, arguments);
         }
     }
 };

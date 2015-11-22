@@ -43,10 +43,12 @@ _.isObject = function (obj) {
 // typeof str; "object"
 // Object.prototype.toString.call(str)  "[object String]"
 for (var i = 0, l = class2type.length; i < l; i++) {
-    var name = class2type[i];
-    _['is' + name] = function (obj) {
-        return toString.call(obj) === '[object ' + name + ']';
-    };
+    (function (i) {
+        var name = class2type[i];
+        _['is' + name] = function (obj) {
+            return toString.call(obj) === '[object ' + name + ']';
+        };
+    })(i)
 }
 
 if (typeof /./ !== 'function') {
@@ -141,6 +143,7 @@ _.extend = function () {
     return target;
 };
 
+// 遍历数组
 _.forEach = function (obj, iteratee, context) {
     if (!_.isArray(obj)) return obj;
     var i, length = obj.length;
@@ -170,9 +173,46 @@ _.every = function (obj, predicate, context) {
     return value;
 };
 
+// Object.keys
+_.keys = Object.keys || function (obj) {
+        var ret = [];
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                ret.push(ret);
+            }
+        }
+        return ret;
+    };
 // xx-oo return xxOo
 _.camelCase = function (str) {
     return ("" + str).replace(/-\D/g, function (match) {
         return match.charAt(1).toUpperCase();
     });
+};
+
+// aop enhance
+_.aop = function (fn, before, after) {
+    var handler = fn;
+    return function () {
+        var event = {args: _.toArray(arguments)};
+        before(event);
+        if (!event.stopped) {
+            event.value = handler.apply(this, event.args);
+            after(event);
+        }
+        return event.value;
+    };
+};
+
+// log
+_.log = function (msg, throwflag) {
+    if (throwflag)
+        throw msg;
+    else
+        console.log(msg)
+};
+
+// directive r-required ==> required
+_.dName = function (directiveName) {
+    return directiveName.split('-')[1];
 };

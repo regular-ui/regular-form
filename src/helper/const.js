@@ -18,7 +18,20 @@ var constant = {
     DATETIMELOCAL_REGEXP: /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)(?::(\d\d)(\.\d{1,3})?)?$/,
     WEEK_REGEXP: /^(\d{4})-W(\d\d)$/,
     MONTH_REGEXP: /^(\d{4})-(\d\d)$/,
-    TIME_REGEXP: /^(\d\d):(\d\d)(?::(\d\d)(\.\d{1,3})?)?$/
+    TIME_REGEXP: /^(\d\d):(\d\d)(?::(\d\d)(\.\d{1,3})?)?$/,
+
+
+    PRIORITY: {
+        required: 1,
+        type: 2,
+        min: 3,
+        max: 4,
+        step: 5,
+        pattern: 6,
+        extend: 7
+    }
 };
+
+
 module.exports = constant;
 
