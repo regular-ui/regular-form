@@ -28,8 +28,8 @@ var addControl = function (element, directiveValue, directiveName, attrs) {
         _.log('you need specified a value for [' + name + ']', true);
     }
     var watch = function (model) {
-        directiveValue = extractValue.call(context, directiveValue);
-        return validator[_.camelCase('check-' + key)].call(context, model, directiveValue, name);
+        var dvalue = extractValue.call(context, directiveValue);
+        return validator[_.camelCase('check-' + key)].call(context, model, dvalue, name);
     };
 
     _.forEach(attrs, function (item) {

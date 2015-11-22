@@ -29,18 +29,22 @@ var validator = {
         return constant[type.toUpperCase() + '_REGEXP'].test(model);
     },
     checkMin: function (model, min) {
+        // min可能是输入项，会被转化成string
+        min = parseFloat(min);
         if (!_.isNumber(min)) {
             return true;
         }
         return +model >= min;
     },
     checkMax: function (model, max) {
+        max = parseFloat(max);
         if (!_.isNumber(max)) {
             return true;
         }
         return +model <= max;
     },
     checkStep: function (model, step) {
+        step = parseFloat(step);
         if (!_.isNumber(step)) {
             return true;
         }

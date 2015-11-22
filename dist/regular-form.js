@@ -511,8 +511,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        _.log('you need specified a value for [' + name + ']', true);
 	    }
 	    var watch = function (model) {
-	        directiveValue = extractValue.call(context, directiveValue);
-	        return validator[_.camelCase('check-' + key)].call(context, model, directiveValue, name);
+	        var dvalue = extractValue.call(context, directiveValue);
+	        return validator[_.camelCase('check-' + key)].call(context, model, dvalue, name);
 	    };
 
 	    _.forEach(attrs, function (item) {
@@ -636,18 +636,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return constant[type.toUpperCase() + '_REGEXP'].test(model);
 	    },
 	    checkMin: function (model, min) {
+	        // min可能是输入项，会被转化成string
+	        min = parseFloat(min);
 	        if (!_.isNumber(min)) {
 	            return true;
 	        }
 	        return +model >= min;
 	    },
 	    checkMax: function (model, max) {
+	        max = parseFloat(max);
 	        if (!_.isNumber(max)) {
 	            return true;
 	        }
 	        return +model <= max;
 	    },
 	    checkStep: function (model, step) {
+	        step = parseFloat(step);
 	        if (!_.isNumber(step)) {
 	            return true;
 	        }
