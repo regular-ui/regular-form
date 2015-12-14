@@ -264,6 +264,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return value;
 	};
 
+	// Determine if at least one element in the object matches a truth test
+	_.some = function(obj, predicate, context) {
+	    if (!_.isArray(obj)) return obj;
+	    var length = obj.length;
+	    for (var index = 0; index < length; index++) {
+	        if (predicate.call(context, obj[index], index, obj)) return true;
+	    }
+	    return false;
+	};
+
+
 	// Object.keys
 	_.keys = Object.keys || function (obj) {
 	        var ret = [];
@@ -357,48 +368,52 @@ return /******/ (function(modules) { // webpackBootstrap
 	prototype = {
 	    computed: {
 	        // 整个表单的status
+	        // $dirty  true - 有改动 | false - 干净
 	        '$dirty': function (data) {
 	            var mark = false,
-	                context = this,
 	                keys = _.keys(data.form);
-	            _.forEach(keys, function (key) {
-	                if (!mark)
-	                    mark = data.form[key].$dirty;
+	            mark = _.some(keys, function (key) {
+	                return !!data.form[key].$dirty;
 	            });
 	            var children = this._children;
-	            _.forEach(children, function(it){
-	                if (!mark) {
-	                    mark = !!it.$get('$dirty');
-	                };
+	            if(mark)
+	                return mark;
+	            mark = _.some(children, function(it){
+	                return !!it.$get('$dirty');
 	            });
 	            return mark;
 	        },
+	        // $invalid  true - 验证不通过 | false - 验证通过
 	        '$invalid': function (data) {
 	            var mark = false,
-	                context = this,
 	                keys = _.keys(data.form);
-	            _.forEach(keys, function (key) {
-	                if (!mark)
-	                    mark = data.form[key].$invalid;
+	            mark = _.some(keys, function (key) {
+	                return !!data.form[key].$invalid;
 	            });
 	            var children = this._children;
-	            _.forEach(children, function(it){
-	                if (!mark) {
-	                    mark = !!it.$get('$invalid');
-	                }
+	            if(mark)
+	                return mark;
+	            mark = _.some(children, function(it){
+	                return !!it.$get('$invalid');
 	            });
-	            console.log(mark);
 	            return mark;
 	        }
 	    },
+	    /**
+	     * @overwrite
+	     * @param data
+	     */
 	    config: function (data) {
 	        this.supr(data);
 	        data.form = {};
-	        data.rule = data.rule || 1; // 1:实时验证,2:失去焦点时验证
+	        data.rule = data.rule || 1; // 1 - 实时验证 | 2 - 失去焦点时验证
 	    },
+	    /**
+	     * @overwrite
+	     * @param data
+	     */
 	    init: function (data) {
 	        this.supr(data);
-	        data.rule = data.rule || 1;
 	    },
 	    /**
 	     * 设置表单元素初始值
@@ -419,19 +434,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	            $invalid: false,
 	            $error: {}
 	        });
-	        this.$update();
 	    },
 	    setInValidity: function (name, flag) {
 	        this.data.form['$$' + name].$invalid = flag;
-	        this.$update();
 	    },
 	    setDirty: function (name, flag) {
 	        this.data.form['$$' + name].$dirty = flag;
-	        this.$update();
 	    },
 	    setError: function (name, field, flag) {
 	        this.data.form['$$' + name].$error[field] = flag;
-	        this.$update();
 	    },
 	    addHandler: function (name, handler) {
 	        var handlers = this.data.form['$$' + name].$handler,
@@ -448,9 +459,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            data = this.data,
 	            input = data.form['$$' + name],
 	            handlers = input.$handler;
-	        _.forEach(handlers, function (item, i) {
+	        _.some(handlers, function (item, i) {
 	            if (item.directive === directive) {
 	                index = i;
+	                return true;
 	            }
 	        });
 	        (index !== -1) && handlers.splice(index, 1);
@@ -488,7 +500,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            context.setDirty(checkItem.$name, model !== origin);
 	            context.setInValidity(checkItem.$name, !mark);
 	        }
-	        context.$update();
 	    }
 	};
 	module.exports = prototype;
@@ -524,16 +535,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        name = element.name,
 	        key = _.dName(directiveName);
 	    if (!name || name === '') {
-	        _.log('you need specified a value for [' + name + ']', true);
+	        _.log('you need specified a value for name', true);
 	    }
 	    var watch = function (model) {
 	        var dvalue = extractValue.call(context, directiveValue);
 	        return validator[_.camelCase('check-' + key)].call(context, model, dvalue, name);
 	    };
 
-	    _.forEach(attrs, function (item) {
+	    _.some(attrs, function (item) {
 	        if (item.name === 'r-model') {
 	            rModel = item.value;
+	            return true;
 	        }
 	    });
 	    // r-model指令在执行之后，regular会将其删除
@@ -581,31 +593,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    },
 	    'r-required': {
+	        priority: 110,
 	        link: function (element, value, dname, attrs) {
 	            return addControl.apply(this, arguments);
 	        }
 	    },
 	    'r-type': {
+	        priority: 120,
 	        link: function (element, value, dname, attrs) {
 	            return addControl.apply(this, arguments);
 	        }
 	    },
 	    'r-min': {
+	        priority: 130,
 	        link: function (element, value, dname, attrs) {
 	            return addControl.apply(this, arguments);
 	        }
 	    },
 	    'r-max': {
+	        priority: 140,
 	        link: function (element, value, dname, attrs) {
 	            return addControl.apply(this, arguments);
 	        }
 	    },
 	    'r-step': {
+	        priority: 150,
 	        link: function (element, value, dname, attrs) {
 	            return addControl.apply(this, arguments);
 	        }
 	    },
 	    'r-pattern': {
+	        priority: 150,
 	        link: function (element, value, dname, attrs) {
 	            return addControl.apply(this, arguments);
 	        }

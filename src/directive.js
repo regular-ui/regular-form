@@ -25,16 +25,17 @@ var addControl = function (element, directiveValue, directiveName, attrs) {
         name = element.name,
         key = _.dName(directiveName);
     if (!name || name === '') {
-        _.log('you need specified a value for [' + name + ']', true);
+        _.log('you need specified a value for name', true);
     }
     var watch = function (model) {
         var dvalue = extractValue.call(context, directiveValue);
         return validator[_.camelCase('check-' + key)].call(context, model, dvalue, name);
     };
 
-    _.forEach(attrs, function (item) {
+    _.some(attrs, function (item) {
         if (item.name === 'r-model') {
             rModel = item.value;
+            return true;
         }
     });
     // r-model指令在执行之后，regular会将其删除
@@ -82,31 +83,37 @@ var input = {
         }
     },
     'r-required': {
+        priority: 110,
         link: function (element, value, dname, attrs) {
             return addControl.apply(this, arguments);
         }
     },
     'r-type': {
+        priority: 120,
         link: function (element, value, dname, attrs) {
             return addControl.apply(this, arguments);
         }
     },
     'r-min': {
+        priority: 130,
         link: function (element, value, dname, attrs) {
             return addControl.apply(this, arguments);
         }
     },
     'r-max': {
+        priority: 140,
         link: function (element, value, dname, attrs) {
             return addControl.apply(this, arguments);
         }
     },
     'r-step': {
+        priority: 150,
         link: function (element, value, dname, attrs) {
             return addControl.apply(this, arguments);
         }
     },
     'r-pattern': {
+        priority: 150,
         link: function (element, value, dname, attrs) {
             return addControl.apply(this, arguments);
         }

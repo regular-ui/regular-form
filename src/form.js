@@ -43,48 +43,52 @@ var checkRule = {
 prototype = {
     computed: {
         // 整个表单的status
+        // $dirty  true - 有改动 | false - 干净
         '$dirty': function (data) {
             var mark = false,
-                context = this,
                 keys = _.keys(data.form);
-            _.forEach(keys, function (key) {
-                if (!mark)
-                    mark = data.form[key].$dirty;
+            mark = _.some(keys, function (key) {
+                return !!data.form[key].$dirty;
             });
             var children = this._children;
-            _.forEach(children, function(it){
-                if (!mark) {
-                    mark = !!it.$get('$dirty');
-                };
+            if(mark)
+                return mark;
+            mark = _.some(children, function(it){
+                return !!it.$get('$dirty');
             });
             return mark;
         },
+        // $invalid  true - 验证不通过 | false - 验证通过
         '$invalid': function (data) {
             var mark = false,
-                context = this,
                 keys = _.keys(data.form);
-            _.forEach(keys, function (key) {
-                if (!mark)
-                    mark = data.form[key].$invalid;
+            mark = _.some(keys, function (key) {
+                return !!data.form[key].$invalid;
             });
             var children = this._children;
-            _.forEach(children, function(it){
-                if (!mark) {
-                    mark = !!it.$get('$invalid');
-                }
+            if(mark)
+                return mark;
+            mark = _.some(children, function(it){
+                return !!it.$get('$invalid');
             });
-            console.log(mark);
             return mark;
         }
     },
+    /**
+     * @overwrite
+     * @param data
+     */
     config: function (data) {
         this.supr(data);
         data.form = {};
-        data.rule = data.rule || 1; // 1:实时验证,2:失去焦点时验证
+        data.rule = data.rule || 1; // 1 - 实时验证 | 2 - 失去焦点时验证
     },
+    /**
+     * @overwrite
+     * @param data
+     */
     init: function (data) {
         this.supr(data);
-        data.rule = data.rule || 1;
     },
     /**
      * 设置表单元素初始值
@@ -105,19 +109,15 @@ prototype = {
             $invalid: false,
             $error: {}
         });
-        this.$update();
     },
     setInValidity: function (name, flag) {
         this.data.form['$$' + name].$invalid = flag;
-        this.$update();
     },
     setDirty: function (name, flag) {
         this.data.form['$$' + name].$dirty = flag;
-        this.$update();
     },
     setError: function (name, field, flag) {
         this.data.form['$$' + name].$error[field] = flag;
-        this.$update();
     },
     addHandler: function (name, handler) {
         var handlers = this.data.form['$$' + name].$handler,
@@ -134,9 +134,10 @@ prototype = {
             data = this.data,
             input = data.form['$$' + name],
             handlers = input.$handler;
-        _.forEach(handlers, function (item, i) {
+        _.some(handlers, function (item, i) {
             if (item.directive === directive) {
                 index = i;
+                return true;
             }
         });
         (index !== -1) && handlers.splice(index, 1);
@@ -174,7 +175,6 @@ prototype = {
             context.setDirty(checkItem.$name, model !== origin);
             context.setInValidity(checkItem.$name, !mark);
         }
-        context.$update();
     }
 };
 module.exports = prototype;

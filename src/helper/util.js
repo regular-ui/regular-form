@@ -173,6 +173,17 @@ _.every = function (obj, predicate, context) {
     return value;
 };
 
+// Determine if at least one element in the object matches a truth test
+_.some = function(obj, predicate, context) {
+    if (!_.isArray(obj)) return obj;
+    var length = obj.length;
+    for (var index = 0; index < length; index++) {
+        if (predicate.call(context, obj[index], index, obj)) return true;
+    }
+    return false;
+};
+
+
 // Object.keys
 _.keys = Object.keys || function (obj) {
         var ret = [];
