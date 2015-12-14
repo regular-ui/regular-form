@@ -471,7 +471,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        } else {
 	            var mark = true,
 	                checkItem = data.form['$$' + name],
-	                model = context.$get(checkItem.$model);
+	                model = context.$get(checkItem.$model) || '',
+	                origin = checkItem.$origin || '';
 	            _.forEach(checkItem.$handler, function (item) {
 	                if (mark) {
 	                    mark = item.handler.call(context, model);
@@ -484,7 +485,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            });
 	            // 表单元素全部都是string类型
 	            // 污染之后清空，值为'', 默认为undefined
-	            context.setDirty(checkItem.$name, !!model != !!checkItem.$origin);
+	            context.setDirty(checkItem.$name, model !== origin);
 	            context.setInValidity(checkItem.$name, !mark);
 	        }
 	        context.$update();
