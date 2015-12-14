@@ -45,20 +45,35 @@ prototype = {
         // 整个表单的status
         '$dirty': function (data) {
             var mark = false,
+                context = this,
                 keys = _.keys(data.form);
             _.forEach(keys, function (key) {
                 if (!mark)
                     mark = data.form[key].$dirty;
             });
+            var children = this._children;
+            _.forEach(children, function(it){
+                if (!mark) {
+                    mark = !!it.$get('$dirty');
+                };
+            });
             return mark;
         },
         '$invalid': function (data) {
             var mark = false,
+                context = this,
                 keys = _.keys(data.form);
             _.forEach(keys, function (key) {
                 if (!mark)
                     mark = data.form[key].$invalid;
             });
+            var children = this._children;
+            _.forEach(children, function(it){
+                if (!mark) {
+                    mark = !!it.$get('$invalid');
+                }
+            });
+            console.log(mark);
             return mark;
         }
     },

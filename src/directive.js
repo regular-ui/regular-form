@@ -67,6 +67,7 @@ var r_Model = Regular.directive("r-model");
 var input = {
     // r-model在不需要验证的元素上也会用到，表单name不是必须的
     'r-model': {
+        priority: 100,
         link: function (element, value, dname, attrs) {
             // name是必填的
             var name = element.name;

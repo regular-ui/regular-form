@@ -8,7 +8,7 @@
                 return model > 500;
             };
             data.extend2 = function (model) {
-                return model === 'hello@163.com'
+                return model === 'hello@163.com';
             };
             data.max = 1024;
             data.pattern = /^\d{3}$/;
