@@ -366,6 +366,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	};
 	prototype = {
+	    name: 'regular-form',
 	    computed: {
 	        // 整个表单的status
 	        // $dirty  true - 有改动 | false - 干净
