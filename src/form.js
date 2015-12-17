@@ -40,7 +40,7 @@ var checkRule = {
         }
     }
 };
-prototype = {
+var prototype = {
     name: 'regular-form',
     computed: {
         // 整个表单的status
