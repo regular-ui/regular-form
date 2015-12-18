@@ -1,4 +1,6 @@
 ### RegularForm简介
+npm install regular-form
+
 Demo & API：[戳这里](http://amibug.github.io/regular-form-demo/ )
 
 ###### 使用要点
