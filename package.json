@@ -1,7 +1,7 @@
 {
   "name": "regular-form",
   "version": "0.1.0",
-  "description": "RegularJs(regular) Foram Validate.",
+  "description": "RegularJs(regular) Form Validate.",
   "main": "index.js",
   "scripts": {
     "test": "gulp test"
