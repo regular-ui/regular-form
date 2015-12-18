@@ -1,6 +1,6 @@
 /**
 @author	amibug
-@version	0.1.0
+@version	0.1.1
 @homepage	
 */
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -365,7 +365,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 	};
-	prototype = {
+	var prototype = {
 	    name: 'regular-form',
 	    computed: {
 	        // 整个表单的status
