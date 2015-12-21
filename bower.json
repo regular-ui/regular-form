@@ -1,0 +1,28 @@
+{
+  "name": "regular-form",
+  "version": "0.1.1",
+  "homepage": "https://github.com/amibug/regular-form",
+  "authors": [
+    "amibug <hzxs1990225@163.com>"
+  ],
+  "description": "RegularJs(regular) Form Validate.",
+  "main": "src/index.js",
+  "moduleType": [
+    "amd",
+    "es6",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "regularjs",
+    "form validate"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
