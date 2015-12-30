@@ -12,12 +12,6 @@ Demo & API：[戳这里](http://amibug.github.io/regular-form-demo/ )
 
 ### API
 
-#### Options
-
-| 参数          | 类型        | 默认值        | 描述        |
-| ------------- | ----------- | ------------- | ----------- |
-| rule          |  Number     |  1            | 1 - 实时验证 2 - 失去焦点时验证 |
-
 #### Directive
 
 | 指令          | 指令值      | 描述          |
@@ -35,10 +29,12 @@ Demo & API：[戳这里](http://amibug.github.io/regular-form-demo/ )
 
 | 属性          | 类型        | 描述          |
 | ------------- | ----------- | ------------- |
-| $dirty                      |  Boolean     | 表单是否有改动的 |
+| $dirty                      |  Boolean     | 表单是否有改动的，内容改动之后就会置为true即使改回原来的值 |
 | $invalid                    |  Boolean     | 表单是否验证通过 |
-| $submitted                  |  Boolean     | 表单提交状态（TODO） |
-| form.$$name.$dirty          |  Boolean     | 具体一个表单元素是否有改动 |
+| $submitted                  |  Boolean     | 表单提交状态,点击提交就会置为true,用于提交时显示错误|
+| form.$$name.$dirty          |  Boolean     | 具体一个表单元素是否有过交互，内容改动之后就会置为true即使改回原来的值 |
+| form.$$name.$dirty2         |  Boolean     | $dirty || $touched || $submitted,实时显示错误需要依赖的标记 |
+| form.$$name.$touched        |  Boolean     | 具体一个表单元素触发过blur事件 |
 | form.$$name.$error.required | Boolean      | 具体一个表单元素的验证非法类型，true - 验证通过 false - 验证失败， name置表单元素的name属性
 | form.$$name.$error.type     |  Boolean     | 
 | form.$$name.$error.min      |  Boolean     |

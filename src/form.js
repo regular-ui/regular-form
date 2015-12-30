@@ -9,39 +9,31 @@
  * form status
  * @property {boolean} $dirty True if user has already interacted with the form.
  * @property {boolean} $invalid True if at least one containing control or form is invalid.
+ * @property {boolean} $submitted True if user has submitted the form even if its invalid.
  * @property {Object} $error Is an object hash, containing references to controls or forms with failing validators.
  */
-var Regular = require('regularjs');
-var _ = require('./helper/util');
+var Regular = __webpack_require__(1);
+var _ = __webpack_require__(2);
 var dom = Regular.dom;
-var checkRule = {
-    '1': function (input, off) {
-        var context = this;
-        if (!!off) {
-            this.$unwatch(input.$model, function (newValue, oldValue) {
-                context.checkValidity(input.$name);
-            });
-        } else {
-            this.$watch(input.$model, function (newValue, oldValue) {
-                context.checkValidity(input.$name);
-            });
-        }
-    },
-    '2': function (input, off) {
-        var context = this;
-        if (!!off) {
-            dom.off(input.$element, 'blur', function () {
-                context.checkValidity(input.$name);
-            });
-        } else {
-            dom.on(input.$element, 'blur', function () {
-                context.checkValidity(input.$name);
-            });
-        }
+var checkRule = function (input, off) {
+    var context = this;
+    dom.on(input.$element, 'blur', function () {
+        context.setTouched(input.$name, true);
+        context.setDirty2(input.$name);
+        context.$update();
+    });
+    if (!!off) {
+        this.$unwatch(input.$model, function (newValue, oldValue) {
+            context.checkValidity(input.$name);
+        });
+    } else {
+        this.$watch(input.$model, function (newValue, oldValue) {
+            context.setDirty(input.$name, true);
+            context.checkValidity(input.$name);
+        });
     }
 };
-var prototype = {
-    name: 'regular-form',
+prototype = {
     computed: {
         // 整个表单的status
         // $dirty  true - 有改动 | false - 干净
@@ -52,9 +44,9 @@ var prototype = {
                 return !!data.form[key].$dirty;
             });
             var children = this._children;
-            if(mark)
+            if (mark)
                 return mark;
-            mark = _.some(children, function(it){
+            mark = _.some(children, function (it) {
                 return !!it.$get('$dirty');
             });
             return mark;
@@ -67,9 +59,9 @@ var prototype = {
                 return !!data.form[key].$invalid;
             });
             var children = this._children;
-            if(mark)
+            if (mark)
                 return mark;
-            mark = _.some(children, function(it){
+            mark = _.some(children, function (it) {
                 return !!it.$get('$invalid');
             });
             return mark;
@@ -82,7 +74,6 @@ var prototype = {
     config: function (data) {
         this.supr(data);
         data.form = {};
-        data.rule = data.rule || 1; // 1 - 实时验证 | 2 - 失去焦点时验证
     },
     /**
      * @overwrite
@@ -90,6 +81,11 @@ var prototype = {
      */
     init: function (data) {
         this.supr(data);
+        var keys = _.keys(data.form);
+        var context = this;
+        _.forEach(keys, function (it, idx) {
+            checkRule.call(context, data.form[it]);
+        });
     },
     /**
      * 设置表单元素初始值
@@ -101,13 +97,14 @@ var prototype = {
         var data = this.data;
         // 表单元素的status
         _.extend(true, data.form['$$' + name] = {}, {
-            $origin: this.$get(model),
             $element: element,
             $name: name,
             $handler: [],
             $model: model,
             $dirty: false,
+            $dirty2: false,
             $invalid: false,
+            $touched: false,
             $error: {}
         });
     },
@@ -117,24 +114,30 @@ var prototype = {
     setDirty: function (name, flag) {
         this.data.form['$$' + name].$dirty = flag;
     },
+    setDirty2: function (name, flag) {
+        var model = this.data.form['$$' + name];
+        var mark = !!model.$dirty || !!model.$touched || !!this.data.$submitted;
+        this.data.form['$$' + name].$dirty2 = mark;
+    },
+    setTouched: function (name, flag) {
+        this.data.form['$$' + name].$touched = flag;
+    },
     setError: function (name, field, flag) {
         this.data.form['$$' + name].$error[field] = flag;
     },
     addHandler: function (name, handler) {
         var handlers = this.data.form['$$' + name].$handler,
-            data = this.data,
-            input = data.form['$$' + name];
+            data = this.data;
         handlers.push(handler);
         handlers.sort(function (handler0, handler1) {
             return handler0.priority - handler1.priority;
         });
-        checkRule[data.rule].call(this, input);
+
     },
     removeHandler: function (name, directive) {
         var index = -1,
             data = this.data,
-            input = data.form['$$' + name],
-            handlers = input.$handler;
+            handlers = data.form['$$' + name].$handler;
         _.some(handlers, function (item, i) {
             if (item.directive === directive) {
                 index = i;
@@ -142,7 +145,6 @@ var prototype = {
             }
         });
         (index !== -1) && handlers.splice(index, 1);
-        checkRule[data.rule].call(this, input, true);
     },
     /**
      * check表单
@@ -159,22 +161,18 @@ var prototype = {
         } else {
             var mark = true,
                 checkItem = data.form['$$' + name],
-                model = context.$get(checkItem.$model) || '',
-                origin = checkItem.$origin || '';
+                model = context.$get(checkItem.$model);
             _.forEach(checkItem.$handler, function (item) {
                 if (mark) {
                     mark = item.handler.call(context, model);
-                    !mark && _.log('directive' + item.directive + 'check error');
                     context.setError(checkItem.$name, _.dName(item.directive), !mark);
                 } else {
                     // 验证过程中有出错的，将PRIORITY低的验证重置
                     context.setError(checkItem.$name, _.dName(item.directive), mark);
                 }
             });
-            // 表单元素全部都是string类型
-            // 污染之后清空，值为'', 默认为undefined
-            context.setDirty(checkItem.$name, model !== origin);
             context.setInValidity(checkItem.$name, !mark);
+            context.setDirty2(checkItem.$name);
         }
     }
 };

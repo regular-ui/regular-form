@@ -217,10 +217,9 @@ _.aop = function (fn, before, after) {
 
 // log
 _.log = function (msg, throwflag) {
-    if (throwflag)
+    if (throwflag){
         throw msg;
-    else
-        console.log(msg)
+    }
 };
 
 // directive r-required ==> required
