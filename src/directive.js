@@ -94,6 +94,12 @@ var input = {
             return addControl.apply(this, arguments);
         }
     },
+    'r-length':{
+        priority: 121,
+        link: function (element, value, dname, attrs) {
+            return addControl.apply(this, arguments);
+        }
+    },
     'r-min': {
         priority: 130,
         link: function (element, value, dname, attrs) {

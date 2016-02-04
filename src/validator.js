@@ -28,6 +28,9 @@ var validator = {
         }
         return constant[type.toUpperCase() + '_REGEXP'].test(model);
     },
+    checkLength: function(model, length){
+        return (''+model).length == length;
+    },
     checkMin: function (model, min) {
         // min可能是输入项，会被转化成string
         min = parseFloat(min);

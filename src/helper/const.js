@@ -22,13 +22,14 @@ var constant = {
 
 
     PRIORITY: {
-        required: 1,
-        type: 2,
-        min: 3,
-        max: 4,
-        step: 5,
-        pattern: 6,
-        extend: 7
+        required: 10,
+        type: 20,
+        length: 30,
+        min: 40,
+        max: 50,
+        step: 60,
+        pattern: 70,
+        extend: 80
     }
 };
 

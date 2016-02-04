@@ -17,18 +17,30 @@ var _ = __webpack_require__(2);
 var dom = Regular.dom;
 var checkRule = function (input, off) {
     var context = this;
+    // for input[type!=radio|checkbox] textarea
     dom.on(input.$element, 'blur', function () {
-        context.setTouched(input.$name, true);
-        context.setDirty2(input.$name);
+        var model = context.$get(input.$model);
+        input.$status = 'blur';
+        context.$update(input.$model, (''+model).trim());
+    });
+    dom.on(input.$element, 'focus', function () {
+        input.$status = 'focus';
+        input.$submit = false;
         context.$update();
     });
+    dom.on(input.$element, 'keyup', function () {
+        input.$status = 'keyup';
+        context.setDirty(input.$name, true);
+        context.$update();
+    });
+    // for select input[type==radio|checkbox]
+    // TODO
     if (!!off) {
         this.$unwatch(input.$model, function (newValue, oldValue) {
             context.checkValidity(input.$name);
         });
     } else {
         this.$watch(input.$model, function (newValue, oldValue) {
-            context.setDirty(input.$name, true);
             context.checkValidity(input.$name);
         });
     }
@@ -51,6 +63,7 @@ prototype = {
             });
             return mark;
         },
+        // 表单验证结果
         // $invalid  true - 验证不通过 | false - 验证通过
         '$invalid': function (data) {
             var mark = false,
@@ -63,6 +76,19 @@ prototype = {
                 return mark;
             mark = _.some(children, function (it) {
                 return !!it.$get('$invalid');
+            });
+            return mark;
+        },
+        // 必填项是否填满
+        // $full  true - 填满 | false - 未填满
+        '$full': function(data){
+            var mark = true,
+                keys = _.keys(data.form);
+            _.some(keys, function (key) {
+                if(!!data.form[key].$error.required){
+                    mark = false;
+                    return true;
+                }
             });
             return mark;
         }
@@ -81,11 +107,6 @@ prototype = {
      */
     init: function (data) {
         this.supr(data);
-        var keys = _.keys(data.form);
-        var context = this;
-        _.forEach(keys, function (it, idx) {
-            checkRule.call(context, data.form[it]);
-        });
     },
     /**
      * 设置表单元素初始值
@@ -97,14 +118,14 @@ prototype = {
         var data = this.data;
         // 表单元素的status
         _.extend(true, data.form['$$' + name] = {}, {
+            $status: '',
             $element: element,
             $name: name,
             $handler: [],
             $model: model,
             $dirty: false,
-            $dirty2: false,
             $invalid: false,
-            $touched: false,
+            $submit: false,
             $error: {}
         });
     },
@@ -114,25 +135,20 @@ prototype = {
     setDirty: function (name, flag) {
         this.data.form['$$' + name].$dirty = flag;
     },
-    setDirty2: function (name, flag) {
-        var model = this.data.form['$$' + name];
-        var mark = !!model.$dirty || !!model.$touched || !!this.data.$submitted;
-        this.data.form['$$' + name].$dirty2 = mark;
-    },
-    setTouched: function (name, flag) {
-        this.data.form['$$' + name].$touched = flag;
-    },
     setError: function (name, field, flag) {
         this.data.form['$$' + name].$error[field] = flag;
     },
     addHandler: function (name, handler) {
         var handlers = this.data.form['$$' + name].$handler,
-            data = this.data;
+            data = this.data,
+            input = data.form['$$' + name];
+        if(!handlers.length){
+            checkRule.call(this, input);
+        }
         handlers.push(handler);
         handlers.sort(function (handler0, handler1) {
             return handler0.priority - handler1.priority;
         });
-
     },
     removeHandler: function (name, directive) {
         var index = -1,
@@ -172,8 +188,16 @@ prototype = {
                 }
             });
             context.setInValidity(checkItem.$name, !mark);
-            context.setDirty2(checkItem.$name);
         }
+    },
+    $$check: function(){
+        var data = this.data;
+        var keys = _.keys(data.form);
+        _.forEach(keys, function (key) {
+            return data.form[key].$submit = true;
+        });
+        this.$update();
+        return this.$get('$invalid');
     }
 };
 module.exports = prototype;
