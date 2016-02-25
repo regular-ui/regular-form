@@ -43,6 +43,7 @@ var addControl = function (element, directiveValue, directiveName, attrs) {
     //if (!rModel || rModel === '') {
     //    _.log('you need specified a value for [r-model]', true);
     //}
+    context.data.form = context.data.form || {};
     if (!context.data.form['$$' + name]) {
         context.resetField(name, element, rModel);
     }

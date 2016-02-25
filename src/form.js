@@ -12,8 +12,8 @@
  * @property {boolean} $submitted True if user has submitted the form even if its invalid.
  * @property {Object} $error Is an object hash, containing references to controls or forms with failing validators.
  */
-var Regular = __webpack_require__(1);
-var _ = __webpack_require__(2);
+var Regular = require('regularjs');
+var _ = require('./helper/util');
 var dom = Regular.dom;
 var checkRule = function (input, off) {
     var context = this;
@@ -59,7 +59,7 @@ prototype = {
             if (mark)
                 return mark;
             mark = _.some(children, function (it) {
-                return !!it.$get('$dirty');
+                return it.$$name === 'regular-form' && !!it.$get('$dirty');
             });
             return mark;
         },
@@ -75,38 +75,32 @@ prototype = {
             if (mark)
                 return mark;
             mark = _.some(children, function (it) {
-                return !!it.$get('$invalid');
+                return it.$$name === 'regular-form' &&　!!it.$get('$invalid');
             });
             return mark;
         },
         // 必填项是否填满
         // $full  true - 填满 | false - 未填满
-        '$full': function(data){
+        '$full': function (data) {
             var mark = true,
                 keys = _.keys(data.form);
             _.some(keys, function (key) {
-                if(!!data.form[key].$error.required){
+                if (!!data.form[key].$error.required) {
+                    mark = false;
+                    return true;
+                }
+            });
+            var children = this._children;
+            if (!mark)
+                return mark;
+            _.some(children, function (it) {
+                if (it.$$name === 'regular-form' && !it.$get('$full')) {
                     mark = false;
                     return true;
                 }
             });
             return mark;
         }
-    },
-    /**
-     * @overwrite
-     * @param data
-     */
-    config: function (data) {
-        this.supr(data);
-        data.form = {};
-    },
-    /**
-     * @overwrite
-     * @param data
-     */
-    init: function (data) {
-        this.supr(data);
     },
     /**
      * 设置表单元素初始值
@@ -116,6 +110,7 @@ prototype = {
      */
     resetField: function (name, element, model) {
         var data = this.data;
+        data.form = data.form || {};
         // 表单元素的status
         _.extend(true, data.form['$$' + name] = {}, {
             $status: '',

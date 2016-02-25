@@ -9,11 +9,10 @@
  */
 
 
-var Regular = require('regularjs'),
-    _ = require('./helper/util'),
-    prototype = require('./form'),
+var prototype = require('./form'),
     directive = require('./directive');
-var RegularForm = Regular.extend(prototype)
-    .directive(directive);
-
+var RegularForm = function(Component){
+    Component.implement(prototype)           // implement method
+        .directive(directive);       // define directive
+};
 module.exports = RegularForm;
